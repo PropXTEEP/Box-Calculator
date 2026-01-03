@@ -42,7 +42,7 @@ if lbs_per_min > 0 and weight_to_remove > 0:
     m2.metric("Amount to be ran", f"{weight_to_remove:,.0f} lbs")
     
     # The Big Result
-    st.success(f"## ⏱️ RUN TIME: {time_seconds:.1f} SECONDS")
+    st.success(f"## ⏱️ CLOSE BOX AFTER: {time_seconds:.1f} SECONDS")
     
     # Visual Progress
     progress_val = min(target_weight / current_weight, 1.0) if current_weight > 0 else 0
