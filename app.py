@@ -3,7 +3,7 @@ import streamlit as st
 # Setup the page look
 st.set_page_config(page_title="Box Cut Calculator", layout="centered")
 
-st.title("🏗️ PropX Box Cut Calculator!")
+st.title("🏗️ PropX Box Cuck Calculator!")
 st.write("Adjust any value below to update the Run Time instantly.")
 
 # --- INPUT SECTION ---
