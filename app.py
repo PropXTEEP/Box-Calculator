@@ -75,12 +75,12 @@ if lbs_per_min > 0 and weight_to_remove > 0:
         if remaining_time > 5:
             color = "green"
             alert_placeholder.empty()
-        elif 0 < remaining_time <= 5:
+        elif 0 < remaining_time <= 3:
             color = "orange"
-            alert_placeholder.warning(f"⚠️ GET READY: {remaining_time:.1f}s REMAINING")
+            alert_placeholder.warning(f"⚠️ START CLOSING NOW!: {remaining_time:.1f}s REMAINING")
         else:
             color = "red"
-            alert_placeholder.error("🚨 CLOSE BOX NOW! 🚨")
+            alert_placeholder.error("🚨 BOX SHOULD BE CLOSED 🚨")
         
         timer_placeholder.markdown(
             f"<h1 style='text-align: center; color: {color};'>"
