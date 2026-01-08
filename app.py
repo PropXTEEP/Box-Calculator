@@ -53,40 +53,40 @@ if lbs_per_min > 0 and weight_to_remove > 0:
     # --- STOPWATCH MODULE ---
     st.subheader("Stopwatch Timer")
     
-    # Control Buttons
     c1, c2, c3 = st.columns(3)
-    
     if c1.button("Start / Resume"):
         if not st.session_state.running:
             st.session_state.start_time = time.time() - st.session_state.elapsed_time
             st.session_state.running = True
-
     if c2.button("Stop / Pause"):
         st.session_state.running = False
-
     if c3.button("Reset"):
         st.session_state.running = False
         st.session_state.elapsed_time = 0
 
-    # Timer Display Logic
     timer_placeholder = st.empty()
+    alert_placeholder = st.empty()
     
-    # If running, we loop and rerun to update the UI
     while st.session_state.running:
         st.session_state.elapsed_time = time.time() - st.session_state.start_time
+        remaining_time = time_seconds - st.session_state.elapsed_time
         
-        # Determine color: turn red if we exceed the calculated time
-        color = "green" if st.session_state.elapsed_time < time_seconds else "red"
+        # Determine Color and Alerts
+        if remaining_time > 5:
+            color = "green"
+            alert_placeholder.empty()
+        elif 0 < remaining_time <= 5:
+            color = "orange"
+            alert_placeholder.warning(f"⚠️ GET READY: {remaining_time:.1f}s REMAINING")
+        else:
+            color = "red"
+            alert_placeholder.error("🚨 CLOSE BOX NOW! 🚨")
         
         timer_placeholder.markdown(
             f"<h1 style='text-align: center; color: {color};'>"
             f"{st.session_state.elapsed_time:.1f} / {time_seconds:.1f} s</h1>", 
             unsafe_allow_html=True
         )
-        
-        # Check if we hit the limit to alert the user
-        if st.session_state.elapsed_time >= time_seconds:
-            st.warning("🚨 TIME TO CLOSE BOX! 🚨")
             
         time.sleep(0.1)
         st.rerun()
@@ -99,7 +99,6 @@ if lbs_per_min > 0 and weight_to_remove > 0:
             unsafe_allow_html=True
         )
 
-    # Visual Progress for the Weight
     st.divider()
     progress_val = min(target_weight / current_weight, 1.0) if current_weight > 0 else 0
     st.progress(progress_val, text=f"Target is {progress_val:.1%} of current weight")
