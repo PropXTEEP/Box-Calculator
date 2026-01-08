@@ -7,31 +7,30 @@ st.set_page_config(page_title="Box Cut Calculator", layout="centered")
 st.title("🏗️ PropX Box Cut Calculator!")
 st.write("Adjust any value below to update the Run Time instantly.")
 
-# --- AUDIO JAVASCRIPT ---
-def play_beep_sequence(continuous=False):
-    # This JS creates an oscillator to produce a "Triple Beep"
-    # If continuous is True, it will repeat the sequence
-    js_code = f"""
+# --- IMPROVED AUDIO JAVASCRIPT ---
+def play_beep_sequence():
+    # Increased gain to 0.5 for more volume
+    js_code = """
     <script>
-    function playTripleBeep() {{
+    (function() {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
+        const freq = 880; // Sharp A5 note
+        const vol = 0.5;  // Increased Volume
         
-        // Triple beep pattern: 3 short bursts
-        [0, 0.2, 0.4].forEach(delay => {{
+        [0, 0.15, 0.3].forEach(delay => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(880, now + delay); // A5 note
-            gain.gain.setValueAtTime(0.1, now + delay);
+            osc.type = 'square'; 
+            osc.frequency.setValueAtTime(freq, now + delay);
+            gain.gain.setValueAtTime(vol, now + delay);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.1);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now + delay);
             osc.stop(now + delay + 0.1);
-        }});
-    }}
-    playTripleBeep();
+        });
+    })();
     </script>
     """
     st.components.v1.html(js_code, height=0)
@@ -101,10 +100,16 @@ if lbs_per_min > 0 and weight_to_remove > 0:
         st.session_state.elapsed_time = time.time() - st.session_state.start_time
         remaining_time = time_seconds - st.session_state.elapsed_time
         
-        # LOGIC FOR SOUNDS
-        # Play triple-beep every 1 second when in warning or over time
-        if remaining_time <= 5:
+        # --- SOUND LOGIC ---
+        # If in the warning zone (5s left), beep every 1.0 seconds
+        if 0 < remaining_time <= 5:
             if time.time() - st.session_state.last_beep_time > 1.0:
+                play_beep_sequence()
+                st.session_state.last_beep_time = time.time()
+        
+        # If time is UP, beep faster (every 0.5 seconds) for high urgency
+        elif remaining_time <= 0:
+            if time.time() - st.session_state.last_beep_time > 0.5:
                 play_beep_sequence()
                 st.session_state.last_beep_time = time.time()
 
@@ -114,10 +119,10 @@ if lbs_per_min > 0 and weight_to_remove > 0:
             alert_placeholder.empty()
         elif 0 < remaining_time <= 5:
             color = "orange"
-            alert_placeholder.warning(f"⚠️ START CLOSING NOW!! {remaining_time:.1f}s REMAINING")
+            alert_placeholder.warning(f"⚠️ GET READY: {remaining_time:.1f}s REMAINING")
         else:
             color = "red"
-            alert_placeholder.error("🚨 BOX SHOULD BE CLOSED 🚨")
+            alert_placeholder.error("🚨 CLOSE BOX NOW! 🚨")
         
         timer_placeholder.markdown(
             f"<h1 style='text-align: center; color: {color}; font-family: monospace;'>"
