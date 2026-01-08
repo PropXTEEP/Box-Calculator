@@ -1,11 +1,23 @@
 import streamlit as st
 import time
+import base64
 
 # Setup the page look
 st.set_page_config(page_title="Box Cut Calculator", layout="centered")
 
 st.title("🏗️ PropX Box Cut Calculator!")
 st.write("Adjust any value below to update the Run Time instantly.")
+
+# --- AUDIO FUNCTION ---
+def play_warning_sound():
+    # This is a short, clean 'ping' sound encoded in base64
+    # You can replace this with any public URL to an .mp3 file
+    audio_html = """
+        <audio autoplay>
+            <source src="https://raw.githubusercontent.com/propx-audio/assets/main/beep.mp3" type="audio/mp3">
+        </audio>
+    """
+    st.components.v1.html(audio_html, height=0)
 
 # --- STOPWATCH SESSION STATE INITIALIZATION ---
 if 'running' not in st.session_state:
@@ -14,6 +26,8 @@ if 'start_time' not in st.session_state:
     st.session_state.start_time = 0
 if 'elapsed_time' not in st.session_state:
     st.session_state.elapsed_time = 0
+if 'alarm_fired' not in st.session_state:
+    st.session_state.alarm_fired = False
 
 # --- INPUT SECTION ---
 st.subheader("1. Frac's Rate & Conc")
@@ -63,6 +77,7 @@ if lbs_per_min > 0 and weight_to_remove > 0:
     if c3.button("Reset"):
         st.session_state.running = False
         st.session_state.elapsed_time = 0
+        st.session_state.alarm_fired = False
 
     timer_placeholder = st.empty()
     alert_placeholder = st.empty()
@@ -75,15 +90,21 @@ if lbs_per_min > 0 and weight_to_remove > 0:
         if remaining_time > 5:
             color = "green"
             alert_placeholder.empty()
-        elif 0 < remaining_time <= 3:
+            st.session_state.alarm_fired = False # Reset alarm if timer is reset/adjusted
+        elif 0 < remaining_time <= 5:
             color = "orange"
-            alert_placeholder.warning(f"⚠️ START CLOSING NOW!: {remaining_time:.1f}s REMAINING")
+            alert_placeholder.warning(f"⚠️ GET READY: {remaining_time:.1f}s REMAINING")
+            
+            # Fire the sound once
+            if not st.session_state.alarm_fired:
+                play_warning_sound()
+                st.session_state.alarm_fired = True
         else:
             color = "red"
-            alert_placeholder.error("🚨 BOX SHOULD BE CLOSED 🚨")
+            alert_placeholder.error("🚨 CLOSE BOX NOW! 🚨")
         
         timer_placeholder.markdown(
-            f"<h1 style='text-align: center; color: {color};'>"
+            f"<h1 style='text-align: center; color: {color}; font-family: monospace;'>"
             f"{st.session_state.elapsed_time:.1f} / {time_seconds:.1f} s</h1>", 
             unsafe_allow_html=True
         )
@@ -94,7 +115,7 @@ if lbs_per_min > 0 and weight_to_remove > 0:
     # Static display when not running
     if not st.session_state.running:
         timer_placeholder.markdown(
-            f"<h1 style='text-align: center; color: grey;'>"
+            f"<h1 style='text-align: center; color: grey; font-family: monospace;'>"
             f"{st.session_state.elapsed_time:.1f} / {time_seconds:.1f} s</h1>", 
             unsafe_allow_html=True
         )
