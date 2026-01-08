@@ -1,10 +1,19 @@
 import streamlit as st
+import time
 
 # Setup the page look
 st.set_page_config(page_title="Box Cut Calculator", layout="centered")
 
 st.title("🏗️ PropX Box Cut Calculator!")
 st.write("Adjust any value below to update the Run Time instantly.")
+
+# --- STOPWATCH SESSION STATE INITIALIZATION ---
+if 'running' not in st.session_state:
+    st.session_state.running = False
+if 'start_time' not in st.session_state:
+    st.session_state.start_time = 0
+if 'elapsed_time' not in st.session_state:
+    st.session_state.elapsed_time = 0
 
 # --- INPUT SECTION ---
 st.subheader("1. Frac's Rate & Conc")
@@ -26,7 +35,6 @@ with col_bot2:
     target_weight = st.number_input("Target End Weight (lbs)", min_value=0, step=100, value=11000)
 
 # --- CALCULATION LOGIC ---
-# lbs/min = Clean Rate * 42 (gal/bbl) * Concentration
 lbs_per_min = clean_rate * 42 * sand_conc
 weight_to_remove = current_weight - target_weight
 
@@ -36,15 +44,63 @@ st.divider()
 if lbs_per_min > 0 and weight_to_remove > 0:
     time_seconds = (weight_to_remove / lbs_per_min) * 60
     
-    # Large displays for easy reading on the fly
     m1, m2 = st.columns(2)
     m1.metric("Sand Rate", f"{lbs_per_min:,.0f} lb/min")
     m2.metric("Amount to be ran", f"{weight_to_remove:,.0f} lbs")
     
-    # The Big Result
     st.success(f"## ⏱️ CLOSE BOX AFTER: {time_seconds:.1f} SECONDS")
     
-    # Visual Progress
+    # --- STOPWATCH MODULE ---
+    st.subheader("Stopwatch Timer")
+    
+    # Control Buttons
+    c1, c2, c3 = st.columns(3)
+    
+    if c1.button("Start / Resume"):
+        if not st.session_state.running:
+            st.session_state.start_time = time.time() - st.session_state.elapsed_time
+            st.session_state.running = True
+
+    if c2.button("Stop / Pause"):
+        st.session_state.running = False
+
+    if c3.button("Reset"):
+        st.session_state.running = False
+        st.session_state.elapsed_time = 0
+
+    # Timer Display Logic
+    timer_placeholder = st.empty()
+    
+    # If running, we loop and rerun to update the UI
+    while st.session_state.running:
+        st.session_state.elapsed_time = time.time() - st.session_state.start_time
+        
+        # Determine color: turn red if we exceed the calculated time
+        color = "green" if st.session_state.elapsed_time < time_seconds else "red"
+        
+        timer_placeholder.markdown(
+            f"<h1 style='text-align: center; color: {color};'>"
+            f"{st.session_state.elapsed_time:.1f} / {time_seconds:.1f} s</h1>", 
+            unsafe_allow_html=True
+        )
+        
+        # Check if we hit the limit to alert the user
+        if st.session_state.elapsed_time >= time_seconds:
+            st.warning("🚨 TIME TO CLOSE BOX! 🚨")
+            
+        time.sleep(0.1)
+        st.rerun()
+
+    # Static display when not running
+    if not st.session_state.running:
+        timer_placeholder.markdown(
+            f"<h1 style='text-align: center; color: grey;'>"
+            f"{st.session_state.elapsed_time:.1f} / {time_seconds:.1f} s</h1>", 
+            unsafe_allow_html=True
+        )
+
+    # Visual Progress for the Weight
+    st.divider()
     progress_val = min(target_weight / current_weight, 1.0) if current_weight > 0 else 0
     st.progress(progress_val, text=f"Target is {progress_val:.1%} of current weight")
 
