@@ -105,13 +105,13 @@ if lbs_per_min > 0 and weight_to_remove > 0:
             color = "#28a745" # Green
         elif 0 < rem <= 5:
             color = "#fd7e14" # Orange
-            alert_placeholder.warning(f"⚠️ CLOSE BOX IN {rem:.1f}s")
+            alert_placeholder.warning(f"⚠️ START CLOSING THE BOX {rem:.1f}s")
             if time.time() - st.session_state.last_beep_time > 1.0:
                 play_beep_sequence()
                 st.session_state.last_beep_time = time.time()
         else:
             color = "#dc3545" # Red
-            alert_placeholder.error("🚨 CLOSE BOX NOW! 🚨")
+            alert_placeholder.error("🚨 BOX SHOULD BE CLOSED! 🚨")
             if time.time() - st.session_state.last_beep_time > 0.5:
                 play_beep_sequence()
                 st.session_state.last_beep_time = time.time()
