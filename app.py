@@ -1,93 +1,143 @@
 import streamlit as st
 import time
-import smtplib
-from email.message import EmailMessage
 
-# --- CONFIGURATION (Use Streamlit Secrets in Production) ---
-# For Gmail: You must use an "App Password," not your regular login.
-EMAIL_SENDER = "your-email@gmail.com"
-EMAIL_PASSWORD = "your-app-password-here"
+# Setup the page look
+st.set_page_config(page_title="Box Cut Calculator", layout="centered")
 
-# --- SMS GATEWAY MAP ---
-CARRIERS = {
-    "AT&T": "@txt.att.net",
-    "Verizon": "@vtext.com",
-    "T-Mobile": "@tmomail.net",
-    "Sprint": "@messaging.sprintpcs.com",
-    "Cricket": "@mms.cricketwireless.net",
-    "Boost": "@myboostmobile.com"
-}
-
-def send_free_sms(number, carrier_domain, message):
-    recipient = f"{number}{carrier_domain}"
-    msg = EmailMessage()
-    msg.set_content(message)
-    msg["To"] = recipient
-    msg["From"] = EMAIL_SENDER
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            server.send_message(msg)
-    except Exception as e:
-        st.error(f"Text failed: {e}")
-
-# --- SETUP PAGE ---
-st.set_page_config(page_title="PropX Box Cut", layout="centered")
 st.title("🏗️ PropX Box Cut Calculator")
+st.write("Adjust values to update Run Time instantly.")
+
+# --- IMPROVED AUDIO JAVASCRIPT ---
+def play_beep_sequence():
+    js_code = """
+    <script>
+    (function() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Browsers require resuming the context after a user gesture
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        
+        const now = audioCtx.currentTime;
+        const freq = 880; 
+        const vol = 0.5;  
+        
+        [0, 0.15, 0.3].forEach(delay => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square'; 
+            osc.frequency.setValueAtTime(freq, now + delay);
+            gain.gain.setValueAtTime(vol, now + delay);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + delay);
+            osc.stop(now + delay + 0.1);
+        });
+    })();
+    </script>
+    """
+    st.components.v1.html(js_code, height=0)
 
 # --- SESSION STATE ---
-if 'running' not in st.session_state: st.session_state.running = False
-if 'elapsed_time' not in st.session_state: st.session_state.elapsed_time = 0.0
-if 'sms_sent' not in st.session_state: st.session_state.sms_sent = False
+if 'running' not in st.session_state:
+    st.session_state.running = False
+if 'elapsed_time' not in st.session_state:
+    st.session_state.elapsed_time = 0.0
+if 'last_beep_time' not in st.session_state:
+    st.session_state.last_beep_time = 0
 
-# --- SMS SETTINGS ---
-with st.sidebar:
-    st.header("📱 Alert Settings")
-    phone = st.text_input("10-Digit Phone #", placeholder="1234567890")
-    carrier = st.selectbox("Carrier", options=list(CARRIERS.keys()))
-    st.caption("A text will be sent 10s before the target time.")
+# --- INPUT SECTION ---
+st.subheader("1. Frac's Rate & Conc")
+col_top1, col_top2 = st.columns(2)
+with col_top1:
+    clean_rate = st.number_input("Clean Rate (bbls/min)", min_value=0.0, step=0.1, value=80.0)
+with col_top2:
+    sand_conc = st.number_input("Sand Concentration (ppg)", min_value=0.0, step=0.1, value=2.0)
 
-# --- INPUTS & CALCULATIONS ---
-# (Keeping your original input logic)
-clean_rate = st.number_input("Clean Rate (bbls/min)", value=80.0)
-sand_conc = st.number_input("Sand Concentration (ppg)", value=2.0)
-current_weight = st.number_input("Full Weight (lbs)", value=22500)
-target_weight = st.number_input("Target Weight (lbs)", value=11000)
+st.subheader("2. Box Weights")
+col_bot1, col_bot2 = st.columns(2)
+with col_bot1:
+    current_weight = st.number_input("Cut Box's Full Weight (lbs)", min_value=0, step=100, value=22500)
+with col_bot2:
+    target_weight = st.number_input("Target End Weight (lbs)", min_value=0, step=100, value=11000)
 
+# --- CALCULATIONS ---
 lbs_per_min = clean_rate * 42 * sand_conc
 weight_to_remove = current_weight - target_weight
 
+st.divider()
+
 if lbs_per_min > 0 and weight_to_remove > 0:
-    time_seconds = (weight_to_remove / lbs_per_min) * 60
-    st.success(f"### ⏱️ TARGET RUN TIME: {time_seconds:.1f} SECONDS")
+    time_seconds = (weight_to_remove / lbs_per_min) * 60
+    
+    m1, m2 = st.columns(2)
+    m1.metric("Sand Rate", f"{lbs_per_min:,.0f} lb/min")
+    m2.metric("Amount to remove", f"{weight_to_remove:,.0f} lbs")
+    
+    st.success(f"### ⏱️ TARGET RUN TIME: {time_seconds:.1f} SECONDS")
+    
+    # --- STOPWATCH UI ---
+    st.subheader("Stopwatch Timer")
+    c1, c2, c3 = st.columns(3)
+    
+    if c1.button("▶️ Start / Resume", use_container_width=True):
+        st.session_state.running = True
+        st.session_state.start_time = time.time() - st.session_state.elapsed_time
+        
+    if c2.button("⏸️ Stop / Pause", use_container_width=True):
+        st.session_state.running = False
+        
+    if c3.button("🔄 Reset", use_container_width=True):
+        st.session_state.running = False
+        st.session_state.elapsed_time = 0
+        st.session_state.last_beep_time = 0
+        st.rerun()
 
-    # --- STOPWATCH CONTROLS ---
-    c1, c2, c3 = st.columns(3)
-    if c1.button("▶️ Start"):
-        st.session_state.running = True
-        st.session_state.start_time = time.time() - st.session_state.elapsed_time
-    if c2.button("⏸️ Stop"):
-        st.session_state.running = False
-    if c3.button("🔄 Reset"):
-        st.session_state.running = False
-        st.session_state.elapsed_time = 0
-        st.session_state.sms_sent = False # IMPORTANT: Reset SMS trigger
-        st.rerun()
+    timer_placeholder = st.empty()
+    alert_placeholder = st.empty()
+    
+    # --- LIVE LOOP ---
+    if st.session_state.running:
+        st.session_state.elapsed_time = time.time() - st.session_state.start_time
+        rem = time_seconds - st.session_state.elapsed_time
+        
+        # Color & Alert Logic
+        if rem > 5:
+            color = "#28a745" # Green
+        elif 0 < rem <= 5:
+            color = "#fd7e14" # Orange
+            alert_placeholder.warning(f"⚠️ START CLOSING THE BOX {rem:.1f}s")
+            if time.time() - st.session_state.last_beep_time > 1.0:
+                play_beep_sequence()
+                st.session_state.last_beep_time = time.time()
+        else:
+            color = "#dc3545" # Red
+            alert_placeholder.error("🚨 BOX SHOULD BE CLOSED! 🚨")
+            if time.time() - st.session_state.last_beep_time > 0.5:
+                play_beep_sequence()
+                st.session_state.last_beep_time = time.time()
 
-    # --- LIVE LOOP ---
-    timer_placeholder = st.empty()
-    if st.session_state.running:
-        st.session_state.elapsed_time = time.time() - st.session_state.start_time
-        rem = time_seconds - st.session_state.elapsed_time
+        timer_placeholder.markdown(
+            f"<div style='text-align: center; border: 2px solid {color}; padding: 20px; border-radius: 10px;'>"
+            f"<p style='margin:0; color: grey;'>Elapsed / Target</p>"
+            f"<h1 style='color: {color}; font-family: monospace; font-size: 50px;'>"
+            f"{st.session_state.elapsed_time:.1f}s / {time_seconds:.1f}s</h1></div>", 
+            unsafe_allow_html=True
+        )
+        
+        time.sleep(0.1)
+        st.rerun()
+    else:
+        # Static display
+        timer_placeholder.markdown(
+            f"<div style='text-align: center; border: 2px solid grey; padding: 20px; border-radius: 10px;'>"
+            f"<h1 style='color: grey; font-family: monospace; font-size: 50px;'>"
+            f"{st.session_state.elapsed_time:.1f}s / {time_seconds:.1f}s</h1></div>", 
+            unsafe_allow_html=True
+        )
 
-        # 10 SECOND SMS TRIGGER
-        if 9.8 <= rem <= 10.2 and not st.session_state.sms_sent:
-            if phone:
-                msg_body = f"PropX ALERT: 10s left! Close box at {time_seconds:.1f}s"
-                send_free_sms(phone, CARRIERS[carrier], msg_body)
-                st.session_state.sms_sent = True
+    st.divider()
+    progress_val = min(target_weight / current_weight, 1.0) if current_weight > 0 else 0
+    st.progress(progress_val, text=f"Box will be {progress_val:.1%} full at target")
 
-        timer_placeholder.metric("Elapsed Time", f"{st.session_state.elapsed_time:.1f}s")
-        time.sleep(0.1)
-        st.rerun()
+else:
+    st.info("Please enter valid positive values for rates and weights.")
