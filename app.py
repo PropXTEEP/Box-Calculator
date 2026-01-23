@@ -120,7 +120,7 @@ if lbs_per_min > 0 and weight_to_remove > 0:
                 color = "#28a745" # Green
             else:
                 color = "#fd7e14" # Orange
-                alert_placeholder.warning(f"⚠️ CLOSE BOX IN {rem:.1f}s")
+                alert_placeholder.warning(f"⚠️ START CLOSING THE BOX!! {rem:.1f}s")
                 # Beep every 1s if close
                 if time.time() - st.session_state.last_beep_time > 1.0:
                     play_beep_sequence()
@@ -145,7 +145,7 @@ if lbs_per_min > 0 and weight_to_remove > 0:
             color = "#dc3545" # Red
             msg = "CUT COMPLETE"
             border_style = f"5px solid {color}"
-            alert_placeholder.error("🚨 TARGET WEIGHT REACHED - CLOSE BOX 🚨")
+            alert_placeholder.error("🚨 BOX SHOULD BE CLOSED - KEEP BELT RUNNING 🚨")
         else:
             # If we are just paused manually
             color = "#6c757d" # Grey
