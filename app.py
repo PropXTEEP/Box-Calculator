@@ -13,7 +13,7 @@ with col_logo:
     st.image("https://placehold.co/200x200/png?text=LOGO", use_container_width=True)
 
 with col_title:
-    st.title("🏗️ PropX Box Cut Calculator")
+    st.title("PropX Box Cut Calculator")
 
 # --- AUDIO COMPONENT ---
 def play_beep_sequence():
