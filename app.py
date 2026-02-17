@@ -1,9 +1,19 @@
 import streamlit as st
 import time
 
-# Setup page
+# --- SETUP PAGE ---
 st.set_page_config(page_title="Box Cut Calculator", layout="centered")
-st.title("🏗️ PropX Box Cut Calculator")
+
+# --- LOGO & TITLE SECTION (UPDATED) ---
+# Create two columns: small one for logo, big one for title
+col_logo, col_title = st.columns([1, 5])
+
+with col_logo:
+    # Replace this URL with your local file path, e.g., "propx_logo.png"
+    st.image("https://placehold.co/200x200/png?text=LOGO", use_container_width=True)
+
+with col_title:
+    st.title("🏗️ PropX Box Cut Calculator")
 
 # --- AUDIO COMPONENT ---
 def play_beep_sequence():
