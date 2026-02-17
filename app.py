@@ -10,7 +10,7 @@ col_logo, col_title = st.columns([1, 5])
 
 with col_logo:
     # Replace this URL with your local file path, e.g., "propx_logo.png"
-    st.image("https://placehold.co/200x200/png?text=LOGO", use_container_width=True)
+    st.image("https://www.propx.com/wp-content/uploads/2024/07/cropped-PropX-RGB.png", use_container_width=True)
 
 with col_title:
     st.title("PropX Box Cut Calculator")
