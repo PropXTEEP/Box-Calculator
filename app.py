@@ -46,16 +46,16 @@ if 'timer_finished' not in st.session_state:
 st.subheader("1. Frac's Rate & Conc")
 c1, c2 = st.columns(2)
 with c1:
-    clean_rate = st.number_input("Clean Rate (bpm)", min_value=0.0, value=80.0, step=1.0)
+    clean_rate = st.number_input("Clean Rate (bbls/min)", min_value=0.0, value=0.0, step=1.0)
 with c2:
-    sand_conc = st.number_input("Sand Conc (ppg)", min_value=0.0, value=2.0, step=0.1)
+    sand_conc = st.number_input("Sand Conc (ppg)", min_value=0.0, value=0.0, step=0.1)
 
 st.subheader("2. Box Weights")
 c3, c4 = st.columns(2)
 with c3:
-    current_weight = st.number_input("Full Weight (lbs)", min_value=0, value=22500, step=100)
+    current_weight = st.number_input("Full Weight (lbs)", min_value=0, value=0, step=100)
 with c4:
-    target_weight = st.number_input("Target Weight (lbs)", min_value=0, value=11000, step=100)
+    target_weight = st.number_input("Target Weight (lbs)", min_value=0, value=0, step=100)
 
 # --- CALCULATIONS ---
 lbs_per_min = clean_rate * 42 * sand_conc
