@@ -55,7 +55,7 @@ c3, c4 = st.columns(2)
 with c3:
     current_weight = st.number_input("Full Weight (lbs)", min_value=0, value=0, step=100)
 with c4:
-    target_weight = st.number_input("Target Weight (lbs)", min_value=0, value=0, step=100)
+    target_weight = st.number_input("Target End Weight (lbs)", min_value=0, value=0, step=100)
 
 # --- CALCULATIONS ---
 lbs_per_min = clean_rate * 42 * sand_conc
