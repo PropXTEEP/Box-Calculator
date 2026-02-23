@@ -13,7 +13,7 @@ with col_logo:
     st.image("https://www.propx.com/wp-content/uploads/2024/07/cropped-PropX-RGB.png", use_container_width=True)
 
 with col_title:
-    st.title("🏗️ PropX Box Cut Calculator")
+    st.title("PropX Box Cut Calculator")
 
 # --- AUDIO COMPONENT ---
 def play_beep_sequence():
